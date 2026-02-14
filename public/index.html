@@ -1,0 +1,1165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FWG — ERP Process Navigator</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --ink: #0B1120;
+  --ink-soft: #374151;
+  --ink-muted: #6B7280;
+  --ink-faint: #9CA3AF;
+  --surface: #F7F8FA;
+  --surface-raised: #FFFFFF;
+  --border: #E2E5EA;
+  --border-soft: #F0F1F3;
+  --accent: #1746A2;
+  --accent-light: #E8EEFB;
+  --accent-glow: rgba(23,70,162,0.08);
+
+  --o2c: #0E7363;
+  --o2c-light: #D1FAF0;
+  --s2p: #7C3AED;
+  --s2p-light: #EDE9FE;
+  --r2r: #1746A2;
+  --r2r-light: #DBEAFE;
+  --a2d: #B45309;
+  --a2d-light: #FEF3C7;
+  --h2r: #DC2626;
+  --h2r-light: #FEE2E2;
+  --p2d: #475569;
+  --p2d-light: #F1F5F9;
+
+  --font: 'Outfit', -apple-system, sans-serif;
+  --mono: 'IBM Plex Mono', 'Fira Code', monospace;
+  --radius: 10px;
+  --radius-sm: 6px;
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.04);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.06);
+}
+
+body {
+  font-family: var(--font);
+  background: var(--surface);
+  color: var(--ink);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ─── HEADER ──────────────────────────────────────── */
+.header {
+  background: var(--ink);
+  padding: 24px 32px 20px;
+  border-bottom: 3px solid var(--accent);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+.header-inner { max-width: 1280px; margin: 0 auto; display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 16px; }
+.header-brand { display: flex; align-items: center; gap: 10px; margin-bottom: 2px; }
+.header-badge { background: var(--accent); color: white; font-size: 10px; font-weight: 700; padding: 3px 10px; border-radius: 4px; letter-spacing: 0.08em; font-family: var(--mono); }
+.header-sub { color: #64748B; font-size: 12px; font-family: var(--mono); }
+.header h1 { font-size: 22px; color: #F1F5F9; font-weight: 700; letter-spacing: -0.02em; }
+.header p { font-size: 13px; color: #64748B; margin-top: 2px; }
+
+/* ─── TABS ────────────────────────────────────────── */
+.tabs { display: flex; gap: 3px; background: #1E293B; border-radius: 8px; padding: 3px; }
+.tab-btn {
+  padding: 8px 16px; border-radius: 6px; border: none;
+  background: transparent; color: #94A3B8; font-size: 13px;
+  font-weight: 600; cursor: pointer; font-family: var(--font);
+  transition: all 0.15s ease; white-space: nowrap;
+}
+.tab-btn.active { background: var(--accent); color: white; }
+.tab-btn:hover:not(.active) { color: #CBD5E1; }
+
+/* ─── CONTENT ─────────────────────────────────────── */
+.content { max-width: 1280px; margin: 0 auto; padding: 24px 20px; }
+
+/* ─── PROCESS PILLS ───────────────────────────────── */
+.pills { display: flex; gap: 8px; margin-bottom: 24px; flex-wrap: wrap; }
+.pill {
+  display: flex; align-items: center; gap: 8px;
+  padding: 10px 18px; border-radius: var(--radius);
+  border: 1px solid var(--border); background: var(--surface-raised);
+  cursor: pointer; transition: all 0.2s ease;
+  box-shadow: var(--shadow-sm);
+}
+.pill:hover { box-shadow: var(--shadow-md); transform: translateY(-1px); }
+.pill.active { border-width: 2px; }
+.pill-icon {
+  width: 28px; height: 28px; display: flex; align-items: center;
+  justify-content: center; border-radius: var(--radius-sm);
+  font-weight: 700; font-size: 14px;
+}
+.pill-code { font-size: 13px; font-weight: 700; font-family: var(--mono); }
+.pill-name { font-size: 11px; color: var(--ink-faint); }
+
+/* ─── FLOW DIAGRAM ────────────────────────────────── */
+.flow-wrap { overflow-x: auto; padding-bottom: 12px; }
+.flow { display: flex; align-items: center; gap: 0; }
+.flow-step {
+  position: relative; padding: 14px 18px; border: 1px solid var(--border);
+  border-radius: var(--radius); background: var(--surface-raised);
+  cursor: pointer; min-width: 130px; flex-shrink: 0;
+  transition: all 0.2s ease; box-shadow: var(--shadow-sm);
+}
+.flow-step:hover { box-shadow: var(--shadow-md); transform: translateY(-1px); }
+.flow-step.selected { border-width: 2px; }
+.flow-step.dimmed { opacity: 0.35; }
+.flow-step-num {
+  position: absolute; top: -9px; left: 12px;
+  color: white; font-size: 10px; font-weight: 600;
+  padding: 1px 7px; border-radius: 8px; font-family: var(--mono);
+}
+.flow-step-label { font-size: 13px; font-weight: 600; line-height: 1.3; }
+.flow-step-sys { font-size: 10px; color: var(--ink-faint); margin-top: 4px; font-family: var(--mono); }
+.flow-step-docs {
+  position: absolute; bottom: -8px; right: 8px;
+  background: #F3F4F6; border: 1px solid var(--border);
+  font-size: 9px; padding: 1px 6px; border-radius: 6px;
+  color: var(--ink-muted); font-family: var(--mono);
+}
+.flow-arrow { flex-shrink: 0; margin: 0 2px; }
+
+/* ─── STATUS BADGES ───────────────────────────────── */
+.status-dot {
+  position: absolute; top: 6px; right: 6px; width: 8px; height: 8px;
+  border-radius: 50%;
+}
+.status-dot.not-started { background: #D1D5DB; }
+.status-dot.in-progress { background: #F59E0B; }
+.status-dot.review { background: #3B82F6; }
+.status-dot.completed { background: #10B981; }
+
+/* ─── DETAIL PANEL ────────────────────────────────── */
+.detail-panel {
+  background: var(--surface-raised); border-radius: 12px;
+  padding: 24px; margin-top: 16px; box-shadow: var(--shadow-md);
+}
+.detail-header { display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 12px; margin-bottom: 16px; }
+.detail-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; }
+.detail-card { background: var(--surface); border-radius: var(--radius); padding: 16px; }
+.detail-card-title {
+  font-size: 11px; font-weight: 700; color: var(--ink-faint);
+  text-transform: uppercase; letter-spacing: 0.05em;
+  margin-bottom: 10px; font-family: var(--font);
+}
+.detail-item { display: flex; align-items: center; gap: 8px; padding: 6px 0; border-bottom: 1px solid var(--border-soft); }
+.detail-item:last-child { border-bottom: none; }
+
+/* ─── STATUS CONTROLS ─────────────────────────────── */
+.status-select {
+  padding: 5px 10px; border-radius: var(--radius-sm);
+  border: 1px solid var(--border); font-size: 12px;
+  font-family: var(--font); cursor: pointer; background: white;
+}
+
+/* ─── DASHBOARD CARDS ─────────────────────────────── */
+.dash-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px; }
+.dash-card {
+  background: var(--surface-raised); border-radius: var(--radius);
+  padding: 20px; border: 1px solid var(--border); box-shadow: var(--shadow-sm);
+}
+.dash-card-label { font-size: 11px; font-weight: 600; color: var(--ink-faint); text-transform: uppercase; letter-spacing: 0.05em; }
+.dash-card-value { font-size: 32px; font-weight: 800; margin-top: 4px; letter-spacing: -0.02em; }
+.dash-card-sub { font-size: 12px; color: var(--ink-faint); margin-top: 2px; }
+
+/* ─── PROGRESS BAR ────────────────────────────────── */
+.progress-bar { height: 8px; background: var(--border-soft); border-radius: 4px; overflow: hidden; margin-top: 8px; display: flex; }
+.progress-segment { height: 100%; transition: width 0.3s ease; }
+.progress-seg-completed { background: #10B981; }
+.progress-seg-review { background: #3B82F6; }
+.progress-seg-inprogress { background: #F59E0B; }
+
+/* ─── DOC TABLE ───────────────────────────────────── */
+.doc-table { width: 100%; border-collapse: separate; border-spacing: 0; }
+.doc-table th {
+  text-align: left; padding: 10px 14px; font-size: 11px;
+  font-weight: 700; color: var(--ink-faint); text-transform: uppercase;
+  letter-spacing: 0.04em; border-bottom: 2px solid var(--border);
+  background: var(--surface); position: sticky; top: 0;
+}
+.doc-table td { padding: 10px 14px; font-size: 13px; border-bottom: 1px solid var(--border-soft); }
+.doc-table tr:hover td { background: var(--accent-glow); }
+.doc-code { font-family: var(--mono); font-weight: 600; font-size: 12px; }
+.process-badge {
+  display: inline-block; font-size: 10px; font-weight: 700;
+  padding: 2px 8px; border-radius: 4px; font-family: var(--mono);
+}
+
+/* ─── INTERCONNECTION MAP ─────────────────────────── */
+.map-container { background: var(--surface-raised); border-radius: 12px; border: 1px solid var(--border); padding: 20px; }
+
+/* ─── ROLE CHIPS ──────────────────────────────────── */
+.role-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
+.role-chip {
+  padding: 8px 16px; border-radius: 8px; border: 1px solid var(--border);
+  background: var(--surface-raised); color: var(--ink-soft);
+  font-size: 13px; cursor: pointer; font-weight: 500;
+  transition: all 0.15s ease;
+}
+.role-chip.active { border-color: var(--ink); background: var(--ink); color: white; }
+
+/* ─── SECTION PANEL ───────────────────────────────── */
+.section-panel {
+  background: var(--surface-raised); border-radius: 14px;
+  padding: 24px; border: 1px solid var(--border);
+  box-shadow: var(--shadow-sm); margin-bottom: 20px;
+}
+.section-title { font-size: 19px; font-weight: 700; color: var(--ink); }
+.section-desc { font-size: 13px; color: var(--ink-faint); }
+.section-hint { font-size: 11px; color: var(--ink-faint); font-style: italic; margin: 8px 0 12px; }
+
+/* ─── EMPTY STATE ─────────────────────────────────── */
+.empty-state { text-align: center; padding: 48px 20px; }
+.empty-state-icon { font-size: 32px; margin-bottom: 12px; }
+.empty-state-text { font-size: 15px; color: var(--ink-muted); }
+.empty-state-sub { font-size: 13px; color: var(--ink-faint); margin-top: 6px; }
+
+/* ─── FOOTER ──────────────────────────────────────── */
+.footer {
+  margin-top: 32px; padding: 16px 0; border-top: 1px solid var(--border);
+  display: flex; justify-content: space-between; align-items: center;
+  flex-wrap: wrap; gap: 8px; font-size: 11px; color: var(--ink-faint);
+}
+
+/* ─── CONNECTIONS GRID ────────────────────────────── */
+.conn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+@media (max-width: 900px) { .conn-grid { grid-template-columns: 1fr; } }
+
+.data-flow-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 0; border-bottom: 1px solid var(--border-soft);
+}
+.data-flow-item:last-child { border-bottom: none; }
+
+/* ─── SEARCH ──────────────────────────────────────── */
+.search-input {
+  width: 100%; max-width: 400px; padding: 12px 18px;
+  border-radius: var(--radius); border: 1px solid var(--border);
+  font-size: 14px; outline: none; background: var(--surface-raised);
+  font-family: var(--font);
+}
+.search-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow); }
+
+/* ─── ANIMATION ───────────────────────────────────── */
+@keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+.fade-in { animation: fadeIn 0.3s ease forwards; }
+
+/* ─── RESPONSIVE ──────────────────────────────────── */
+@media (max-width: 768px) {
+  .header { padding: 16px 16px 14px; }
+  .header h1 { font-size: 18px; }
+  .content { padding: 16px 12px; }
+  .dash-grid { grid-template-columns: repeat(2, 1fr); }
+  .tab-btn { padding: 6px 12px; font-size: 12px; }
+}
+
+/* ─── NOTES FIELD ─────────────────────────────────── */
+.notes-field {
+  width: 100%; padding: 8px 12px; border-radius: var(--radius-sm);
+  border: 1px solid var(--border); font-size: 12px;
+  font-family: var(--font); resize: vertical; min-height: 32px;
+}
+.notes-field:focus { border-color: var(--accent); outline: none; box-shadow: 0 0 0 2px var(--accent-glow); }
+
+/* ─── LEGEND ──────────────────────────────────────── */
+.legend { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 16px; }
+.legend-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--ink-muted); }
+.legend-dot { width: 10px; height: 10px; border-radius: 50%; }
+
+/* ─── EXPORT BTN ──────────────────────────────────── */
+.btn {
+  padding: 8px 18px; border-radius: var(--radius-sm); border: 1px solid var(--border);
+  background: var(--surface-raised); color: var(--ink-soft);
+  font-size: 12px; font-weight: 600; cursor: pointer; font-family: var(--font);
+  transition: all 0.15s ease;
+}
+.btn:hover { background: var(--surface); box-shadow: var(--shadow-sm); }
+.btn-primary { background: var(--accent); color: white; border-color: var(--accent); }
+.btn-primary:hover { background: #133D8A; }
+.btn-danger { color: #DC2626; border-color: #FECACA; }
+.btn-danger:hover { background: #FEF2F2; }
+</style>
+</head>
+<body>
+
+<div id="app"></div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════
+// FWG ERP PROCESS NAVIGATOR v2.0 — With Progress Tracking
+// ═══════════════════════════════════════════════════════════════
+
+// ─── DATA MODEL ──────────────────────────────────────────────
+const PROCESSES = {
+  O2C: {
+    code: "O2C", name: "Order to Cash", color: "var(--o2c)", lightColor: "var(--o2c-light)",
+    description: "From customer enquiry through to cash collection", icon: "£",
+    phases: [
+      { id: "o2c-1", label: "Customer Setup", docs: ["O2C-001"], roles: ["AR Clerk", "Credit Controller"], system: "Sage 200 SL", detail: "Create/maintain customer accounts, set credit limits and payment terms" },
+      { id: "o2c-2", label: "Sales Quotation", docs: ["O2C-002"], roles: ["Sales Manager"], system: "Salesforce CRM", detail: "Generate and manage customer quotations, convert to sales orders" },
+      { id: "o2c-3", label: "Sales Order", docs: ["O2C-003", "O2C-004"], roles: ["Sales Admin", "Sales Manager"], system: "Sage 200 SOP", detail: "Process sales orders, manage order amendments and cancellations" },
+      { id: "o2c-4", label: "Dispatch & Delivery", docs: ["O2C-005"], roles: ["Warehouse Operative", "Dispatch Coordinator"], system: "Logia WMS", detail: "Pick, pack and dispatch goods; generate delivery notes" },
+      { id: "o2c-5", label: "Invoicing", docs: ["O2C-006", "O2C-007"], roles: ["AR Clerk", "Entity Accountant"], system: "Sage 200 SL", detail: "Issue sales invoices and credit notes, manage billing subscriptions" },
+      { id: "o2c-6", label: "Credit Control", docs: ["O2C-008", "O2C-009"], roles: ["Credit Controller", "Finance Controller"], system: "Sage 200 SL", detail: "Chase overdue payments, manage credit limits and payment plans" },
+      { id: "o2c-7", label: "Cash Collection", docs: ["O2C-010", "O2C-011"], roles: ["AR Clerk", "Cashier"], system: "Sage 200 CB", detail: "Process customer payments, allocate receipts, manage refunds" },
+      { id: "o2c-8", label: "Bad Debt Write-Off", docs: ["O2C-012"], roles: ["Finance Controller", "CFO"], system: "Sage 200 NL", detail: "Review and write off irrecoverable debts per approval authority" },
+    ],
+  },
+  S2P: {
+    code: "S2P", name: "Source to Pay", color: "var(--s2p)", lightColor: "var(--s2p-light)",
+    description: "From supplier selection through to payment processing", icon: "⇄",
+    phases: [
+      { id: "s2p-1", label: "Supplier Setup", docs: ["S2P-001"], roles: ["AP Clerk", "Procurement Manager"], system: "Sage 200 PL / Tipalti", detail: "Onboard new suppliers, collect bank details, set payment terms" },
+      { id: "s2p-2", label: "Purchase Requisition", docs: ["S2P-002", "S2P-003"], roles: ["Budget Holder", "Requisitioner"], system: "Sage 200 POP", detail: "Raise purchase requisitions, consolidate demand across entities" },
+      { id: "s2p-3", label: "Purchase Order", docs: ["S2P-004", "S2P-005"], roles: ["Buyer", "Procurement Manager"], system: "Sage 200 POP", detail: "Create POs, manage approvals per DOA, issue to suppliers" },
+      { id: "s2p-4", label: "Goods Receipt", docs: ["S2P-006"], roles: ["Warehouse Operative", "Goods-In Clerk"], system: "Logia WMS / Sage 200", detail: "Receive goods, inspect quality, process GRN against PO" },
+      { id: "s2p-5", label: "Invoice Matching", docs: ["S2P-007"], roles: ["AP Clerk", "Entity Accountant"], system: "Sage 200 PL", detail: "Three-way match: PO → GRN → Invoice. Manage discrepancies" },
+      { id: "s2p-6", label: "Supplier Returns", docs: ["S2P-008"], roles: ["Warehouse Operative", "Buyer"], system: "Sage 200 POP", detail: "Process returns to suppliers, manage debit notes" },
+      { id: "s2p-7", label: "Payment Processing", docs: ["S2P-009"], roles: ["AP Clerk", "Finance Controller"], system: "Tipalti / Sage 200 CB", detail: "Run payment batches via Tipalti, BACS, cheque. Dual authorisation" },
+    ],
+  },
+  R2R: {
+    code: "R2R", name: "Record to Report", color: "var(--r2r)", lightColor: "var(--r2r-light)",
+    description: "From transaction recording through to financial reporting", icon: "◎",
+    phases: [
+      { id: "r2r-1", label: "Chart of Accounts", docs: ["FIN-001"], roles: ["Finance Controller", "CFO"], system: "Sage 200 NL", detail: "Maintain standardised COA across all six entities" },
+      { id: "r2r-2", label: "Cost Centre / Dept", docs: ["FIN-002", "FIN-003"], roles: ["Finance Controller"], system: "Sage 200 NL", detail: "Three-dimensional structure: Entity × Cost Centre × Department" },
+      { id: "r2r-3", label: "Journal Posting", docs: ["R2R-001", "R2R-002"], roles: ["Entity Accountant", "Finance Controller"], system: "Sage 200 NL", detail: "Post manual journals, accruals, prepayments. Approval workflow" },
+      { id: "r2r-4", label: "Intercompany", docs: ["R2R-003", "R2R-004"], roles: ["Entity Accountant", "Group Accountant"], system: "Sage 200 NL", detail: "Intercompany trading, recharges, transfer pricing, elimination" },
+      { id: "r2r-5", label: "Bank Reconciliation", docs: ["R2R-005"], roles: ["Cashier", "Entity Accountant"], system: "Sage 200 CB", detail: "Daily/weekly bank reconciliation, manage unmatched items" },
+      { id: "r2r-6", label: "Month-End Close", docs: ["R2R-006", "R2R-007"], roles: ["Finance Controller", "Entity Accountant"], system: "Sage 200 NL", detail: "5-day close cycle: cut-off, adjustments, FA, payroll, review" },
+      { id: "r2r-7", label: "Financial Reporting", docs: ["R2R-008", "R2R-009"], roles: ["Finance Controller", "CFO"], system: "Sage 200 NL", detail: "P&L by entity/CC/dept, Balance Sheet, management accounts pack" },
+      { id: "r2r-8", label: "Period Close", docs: ["R2R-010"], roles: ["Finance Controller"], system: "Sage 200 NL", detail: "Close periods, lock postings, roll forward" },
+    ],
+  },
+  A2D: {
+    code: "A2D", name: "Acquire to Dispose", color: "var(--a2d)", lightColor: "var(--a2d-light)",
+    description: "From asset acquisition through to disposal", icon: "▣",
+    phases: [
+      { id: "a2d-1", label: "Asset Policy", docs: ["A2D-001"], roles: ["Finance Controller", "CFO"], system: "Sicon Fixed Assets", detail: "Define capitalisation thresholds, depreciation methods, asset categories" },
+      { id: "a2d-2", label: "Asset Acquisition", docs: ["A2D-002", "A2D-003"], roles: ["Budget Holder", "Entity Accountant"], system: "Sicon Fixed Assets", detail: "Capitalise assets, record acquisition cost, tag and register" },
+      { id: "a2d-3", label: "Depreciation", docs: ["A2D-004"], roles: ["Entity Accountant"], system: "Sicon Fixed Assets", detail: "Run monthly depreciation, post journals to NL automatically" },
+      { id: "a2d-4", label: "Asset Maintenance", docs: ["A2D-005", "A2D-006"], roles: ["Entity Accountant", "Facilities Manager"], system: "Sicon Fixed Assets", detail: "Transfers between entities/locations, revaluations, impairments" },
+      { id: "a2d-5", label: "Disposal", docs: ["A2D-007"], roles: ["Entity Accountant", "Finance Controller"], system: "Sicon Fixed Assets", detail: "Process disposals, calculate profit/loss, remove from register" },
+    ],
+  },
+  H2R: {
+    code: "H2R", name: "Hire to Retire", color: "var(--h2r)", lightColor: "var(--h2r-light)",
+    description: "From recruitment through to employee offboarding", icon: "◉",
+    phases: [
+      { id: "h2r-1", label: "Recruitment", docs: ["H2R-REC-001"], roles: ["Hiring Manager", "HR Manager"], system: "ADP-FWG", detail: "Vacancy authorisation, job posting, candidate selection" },
+      { id: "h2r-2", label: "Onboarding", docs: ["H2R-ONB-001"], roles: ["HR Manager", "Line Manager", "IT Admin"], system: "ADP-FWG", detail: "New starter setup: contracts, Right to Work, payroll, IT access, induction" },
+      { id: "h2r-3", label: "Expense Management", docs: ["H2R-001", "H2R-002"], roles: ["Employee", "Line Manager", "AP Clerk"], system: "ADP-FWG / Sage 200", detail: "Submit expenses, approval workflow, reimbursement via payroll" },
+      { id: "h2r-4", label: "Payroll Processing", docs: ["H2R-003", "H2R-004"], roles: ["Payroll Manager", "Finance Controller"], system: "ADP-FWG / Sage 200 NL", detail: "Run payroll, post payroll journal, pension contributions" },
+      { id: "h2r-5", label: "Offboarding", docs: ["H2R-OFF-001"], roles: ["HR Manager", "Line Manager", "IT Admin"], system: "ADP-FWG", detail: "Leaver process: final pay, holiday reconciliation, IT revocation, P45" },
+    ],
+  },
+  P2D: {
+    code: "P2D", name: "Project to Delivery", color: "var(--p2d)", lightColor: "var(--p2d-light)",
+    description: "From project setup through to delivery and billing", icon: "△",
+    phases: [
+      { id: "p2d-1", label: "Project Setup", docs: ["P2D-001"], roles: ["Project Manager", "Finance Controller"], system: "Sage 200 / Joblogic", detail: "Create project codes, define budgets, assign cost centres" },
+      { id: "p2d-2", label: "Cost Capture", docs: ["P2D-002"], roles: ["Project Manager", "Entity Accountant"], system: "Sage 200 NL / Joblogic", detail: "Capture labour, materials, subcontractor costs against projects" },
+      { id: "p2d-3", label: "Milestone Billing", docs: ["P2D-003"], roles: ["Project Manager", "AR Clerk"], system: "Sage 200 SL", detail: "Invoice project milestones, manage WIP and revenue recognition" },
+    ],
+  },
+};
+
+const CROSS_LINKS = [
+  { from: "S2P", fromPhase: "s2p-5", to: "R2R", toPhase: "r2r-3", label: "Invoice postings feed GL journals" },
+  { from: "S2P", fromPhase: "s2p-7", to: "R2R", toPhase: "r2r-5", label: "Payments appear in bank reconciliation" },
+  { from: "O2C", fromPhase: "o2c-5", to: "R2R", toPhase: "r2r-3", label: "Sales invoices post to GL" },
+  { from: "O2C", fromPhase: "o2c-7", to: "R2R", toPhase: "r2r-5", label: "Receipts appear in bank reconciliation" },
+  { from: "A2D", fromPhase: "a2d-3", to: "R2R", toPhase: "r2r-3", label: "Depreciation journals post monthly" },
+  { from: "H2R", fromPhase: "h2r-4", to: "R2R", toPhase: "r2r-3", label: "Payroll journal posted to NL" },
+  { from: "H2R", fromPhase: "h2r-3", to: "S2P", toPhase: "s2p-5", label: "Expense invoices processed via AP" },
+  { from: "P2D", fromPhase: "p2d-3", to: "O2C", toPhase: "o2c-5", label: "Project milestones trigger invoicing" },
+  { from: "O2C", fromPhase: "o2c-3", to: "P2D", toPhase: "p2d-2", label: "Sales orders create project costs" },
+  { from: "S2P", fromPhase: "s2p-4", to: "A2D", toPhase: "a2d-2", label: "Capital goods receipt triggers asset creation" },
+];
+
+const GOV_DOCS = [
+  { code: "GOV-001", name: "Segregation of Duties Matrix", applies: ["O2C", "S2P", "R2R"], type: "Control" },
+  { code: "GOV-002", name: "Approval Authority Matrix", applies: ["O2C", "S2P", "R2R", "A2D"], type: "Control" },
+  { code: "GOV-003", name: "Training Needs Analysis", applies: ["O2C", "S2P", "R2R", "A2D", "H2R", "P2D"], type: "Training" },
+  { code: "GOV-004", name: "Month-End Close Checklist", applies: ["R2R"], type: "Operational" },
+  { code: "GOV-005", name: "KPI Dashboard Specification", applies: ["O2C", "S2P", "R2R", "A2D"], type: "Reporting" },
+  { code: "GOV-006", name: "Quick Reference Guides", applies: ["O2C", "S2P", "R2R"], type: "Training" },
+];
+
+const STATUS_OPTIONS = [
+  { value: "not-started", label: "Not Started", color: "#D1D5DB" },
+  { value: "in-progress", label: "In Progress", color: "#F59E0B" },
+  { value: "review", label: "In Review", color: "#3B82F6" },
+  { value: "completed", label: "Completed", color: "#10B981" },
+];
+
+// Build flat doc list
+function getAllDocs() {
+  const docs = [];
+  Object.values(PROCESSES).forEach(proc => {
+    proc.phases.forEach(phase => {
+      phase.docs.forEach(code => {
+        if (!docs.find(d => d.code === code)) {
+          docs.push({ code, process: proc.code, processName: proc.name, phase: phase.label, roles: phase.roles, system: phase.system });
+        }
+      });
+    });
+  });
+  GOV_DOCS.forEach(d => {
+    docs.push({ code: d.code, process: "GOV", processName: "Governance", phase: d.name, roles: [], system: "Cross-cutting", type: d.type });
+  });
+  return docs;
+}
+const ALL_DOCS = getAllDocs();
+
+const ALL_ROLES = [...new Set(Object.values(PROCESSES).flatMap(p => p.phases.flatMap(ph => ph.roles)))].sort();
+
+// ─── STATE MANAGEMENT (API-first, localStorage fallback) ────
+const STORAGE_KEY = "fwg_erp_navigator_v2";
+let useApi = false;
+let isAuthenticated = false;
+
+function loadState() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch(e) {}
+  return { docStatus: {}, docNotes: {} };
+}
+function saveState(state) {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch(e) {}
+}
+
+let appState = loadState();
+
+// Try to connect to API on load
+async function initApi() {
+  try {
+    const res = await fetch('/api/documents');
+    if (res.ok) {
+      useApi = true;
+      const docs = await res.json();
+      docs.forEach(d => {
+        appState.docStatus[d.code] = d.status;
+        appState.docNotes[d.code] = d.notes || '';
+      });
+      saveState(appState);
+      // Check auth
+      const authRes = await fetch('/api/auth/check');
+      if (authRes.ok) {
+        const authData = await authRes.json();
+        isAuthenticated = authData.authenticated;
+      }
+      render();
+    }
+  } catch(e) {
+    // API not available, continue with localStorage
+    useApi = false;
+  }
+}
+
+function getDocStatus(code) { return appState.docStatus[code] || "not-started"; }
+function setDocStatus(code, status) {
+  appState.docStatus[code] = status;
+  saveState(appState);
+  if (useApi && isAuthenticated) {
+    fetch(`/api/documents/${encodeURIComponent(code)}/status`, {
+      method: 'PUT', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status })
+    }).catch(() => {});
+  }
+}
+function getDocNotes(code) { return appState.docNotes[code] || ""; }
+function setDocNotes(code, notes) {
+  appState.docNotes[code] = notes;
+  saveState(appState);
+  if (useApi && isAuthenticated) {
+    fetch(`/api/documents/${encodeURIComponent(code)}/notes`, {
+      method: 'PUT', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ notes })
+    }).catch(() => {});
+  }
+}
+
+async function doLogin(password) {
+  try {
+    const res = await fetch('/api/auth/login', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ password })
+    });
+    if (res.ok) { isAuthenticated = true; render(); return true; }
+  } catch(e) {}
+  return false;
+}
+
+function getStats() {
+  const total = ALL_DOCS.length;
+  let completed = 0, inProgress = 0, review = 0, notStarted = 0;
+  ALL_DOCS.forEach(d => {
+    const s = getDocStatus(d.code);
+    if (s === "completed") completed++;
+    else if (s === "in-progress") inProgress++;
+    else if (s === "review") review++;
+    else notStarted++;
+  });
+  return { total, completed, inProgress, review, notStarted, pct: total ? Math.round((completed / total) * 100) : 0 };
+}
+
+function getProcessStats(procCode) {
+  const docs = ALL_DOCS.filter(d => d.process === procCode);
+  const total = docs.length;
+  let completed = 0, inProgress = 0, review = 0;
+  docs.forEach(d => {
+    const s = getDocStatus(d.code);
+    if (s === "completed") completed++;
+    else if (s === "in-progress") inProgress++;
+    else if (s === "review") review++;
+  });
+  return { total, completed, inProgress, review, pct: total ? Math.round((completed / total) * 100) : 0 };
+}
+
+// ─── RENDER ENGINE ──────────────────────────────────────────
+let currentView = "processes";
+let activeProcess = null;
+let selectedPhase = null;
+let selectedRole = null;
+let searchTerm = "";
+let statusFilter = "all";
+
+function render() {
+  const app = document.getElementById("app");
+  app.innerHTML = renderHeader() + `<div class="content">${renderContent()}</div>`;
+  attachEvents();
+}
+
+function renderHeader() {
+  const stats = getStats();
+  return `
+  <div class="header">
+    <div class="header-inner">
+      <div>
+        <div class="header-brand">
+          <span class="header-badge">FWG</span>
+          <span class="header-sub">Sage 200 / Sicon Manufacturing</span>
+        </div>
+        <h1>ERP Process Navigator</h1>
+        <p>Interactive guide to business processes, documents & system flows</p>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px">
+        <div class="tabs">
+          ${["processes","roles","connections","status"].map(t =>
+            `<button class="tab-btn ${currentView === t ? 'active' : ''}" data-view="${t}">
+              ${t === "processes" ? "Process Flows" : t === "roles" ? "My Role" : t === "connections" ? "Connections" : "Status Dashboard"}
+            </button>`
+          ).join("")}
+        </div>
+        <div style="display:flex;align-items:center;gap:8px">
+          ${useApi ? (isAuthenticated
+            ? '<span style="font-size:10px;color:#10B981;font-family:var(--mono)">● Logged in</span><button class="btn" data-action="logout" style="font-size:10px;padding:4px 10px;color:#94A3B8;border-color:#334155;background:transparent">Logout</button>'
+            : '<button class="btn" data-action="show-login" style="font-size:10px;padding:4px 10px;color:#F59E0B;border-color:#F59E0B30;background:transparent">🔒 Login to edit</button>')
+            : '<span style="font-size:10px;color:#64748B;font-family:var(--mono)">Local mode</span>'}
+          <div style="height:6px;width:120px;background:#1E293B;border-radius:3px;overflow:hidden">
+            <div style="height:100%;width:${stats.pct}%;background:#10B981;border-radius:3px;transition:width 0.3s"></div>
+          </div>
+          <span style="font-size:11px;color:#64748B;font-family:var(--mono)">${stats.pct}% complete</span>
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function renderContent() {
+  switch(currentView) {
+    case "processes": return renderProcessView();
+    case "roles": return renderRoleView();
+    case "connections": return renderConnectionsView();
+    case "status": return renderStatusView();
+  }
+}
+
+// ─── PROCESS FLOWS VIEW ─────────────────────────────────────
+function renderProcessView() {
+  let html = `<div class="pills">`;
+  Object.values(PROCESSES).forEach(proc => {
+    const ps = getProcessStats(proc.code);
+    const active = activeProcess === proc.code;
+    html += `
+    <button class="pill ${active ? 'active' : ''}" data-proc="${proc.code}"
+      style="${active ? `border-color:${proc.color};background:${proc.lightColor}` : ''}">
+      <span class="pill-icon" style="background:${active ? proc.color : '#F3F4F6'};color:${active ? 'white' : '#6B7280'}">${proc.icon}</span>
+      <div style="text-align:left">
+        <div class="pill-code" style="color:${active ? proc.color : 'var(--ink-soft)'}">${proc.code}</div>
+        <div class="pill-name">${proc.name}</div>
+      </div>
+      ${ps.total > 0 ? `<span style="font-size:10px;font-family:var(--mono);color:${ps.pct===100?'#10B981':'var(--ink-faint)'};margin-left:4px">${ps.pct}%</span>` : ''}
+    </button>`;
+  });
+  html += `</div>`;
+
+  if (activeProcess) {
+    const proc = PROCESSES[activeProcess];
+    html += `<div class="section-panel fade-in">`;
+    html += `<div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
+      <span style="background:${proc.color};color:white;font-size:18px;width:36px;height:36px;display:flex;align-items:center;justify-content:center;border-radius:8px;font-weight:700">${proc.icon}</span>
+      <div>
+        <div class="section-title">${proc.name}</div>
+        <div class="section-desc">${proc.description}</div>
+      </div>
+    </div>`;
+    html += `<div style="margin:16px 0 0;padding:4px 0 0;border-top:2px solid ${proc.lightColor}">`;
+    html += `<p class="section-hint">Click any step to see documents, roles, and connections</p>`;
+    html += renderFlowDiagram(proc, null);
+    html += `</div>`;
+    if (selectedPhase) html += renderPhaseDetail(selectedPhase, proc);
+    html += `</div>`;
+  } else {
+    html += `<div class="section-panel empty-state">
+      <div class="empty-state-icon">↑</div>
+      <p class="empty-state-text">Select a process above to explore its end-to-end flow</p>
+      <p class="empty-state-sub">Each process shows steps from start to finish, governing documents, and cross-process connections</p>
+    </div>`;
+  }
+  return html;
+}
+
+function renderFlowDiagram(proc, highlightRole) {
+  let html = `<div class="flow-wrap"><div class="flow">`;
+  proc.phases.forEach((phase, i) => {
+    const isSelected = selectedPhase?.id === phase.id;
+    const isRoleMatch = highlightRole && phase.roles.includes(highlightRole);
+    const dimmed = highlightRole && !isRoleMatch;
+    const docStatus = getPhaseStatus(phase);
+    
+    html += `<button class="flow-step ${isSelected ? 'selected' : ''} ${dimmed ? 'dimmed' : ''}" data-phase="${phase.id}" data-proc="${proc.code}"
+      style="${isSelected ? `border-color:${proc.color};background:${proc.lightColor}` : ''}">
+      <span class="status-dot ${docStatus}"></span>
+      <span class="flow-step-num" style="background:${isRoleMatch ? proc.color : '#6B7280'}">${i+1}</span>
+      <div class="flow-step-label" style="color:${isSelected ? proc.color : 'var(--ink)'}">${phase.label}</div>
+      <div class="flow-step-sys">${phase.system.split("/")[0].trim()}</div>
+      ${phase.docs.length > 0 ? `<span class="flow-step-docs">${phase.docs.length} doc${phase.docs.length>1?'s':''}</span>` : ''}
+    </button>`;
+    if (i < proc.phases.length - 1) {
+      html += `<svg class="flow-arrow" width="28" height="20" viewBox="0 0 28 20">
+        <path d="M4 10 L20 10" stroke="${proc.color}" stroke-width="2" ${dimmed ? 'stroke-dasharray="4 3"' : ''} opacity="${dimmed ? 0.3 : 0.6}" />
+        <path d="M17 5 L23 10 L17 15" fill="none" stroke="${proc.color}" stroke-width="2" opacity="${dimmed ? 0.3 : 0.6}" />
+      </svg>`;
+    }
+  });
+  html += `</div></div>`;
+  return html;
+}
+
+function getPhaseStatus(phase) {
+  const statuses = phase.docs.map(d => getDocStatus(d));
+  if (statuses.every(s => s === "completed")) return "completed";
+  if (statuses.some(s => s === "review")) return "review";
+  if (statuses.some(s => s === "in-progress")) return "in-progress";
+  return "not-started";
+}
+
+function renderPhaseDetail(phase, proc) {
+  const incoming = CROSS_LINKS.filter(l => l.toPhase === phase.id);
+  const outgoing = CROSS_LINKS.filter(l => l.fromPhase === phase.id);
+
+  let html = `<div class="detail-panel fade-in" style="border-color:${proc.color}30;box-shadow:0 4px 16px ${proc.color}08">`;
+  html += `<div class="detail-header">
+    <div>
+      <h3 style="font-size:18px;font-weight:700">${phase.label}</h3>
+      <p style="margin:6px 0 0;font-size:14px;color:var(--ink-muted);line-height:1.5">${phase.detail}</p>
+    </div>
+    <span style="background:${proc.lightColor};padding:6px 14px;border-radius:8px;font-size:12px;color:${proc.color};font-weight:600;font-family:var(--mono)">${phase.system}</span>
+  </div>`;
+
+  html += `<div class="detail-grid">`;
+  
+  // Documents with status controls
+  html += `<div class="detail-card">
+    <div class="detail-card-title">Process Documents</div>`;
+  phase.docs.forEach(doc => {
+    const status = getDocStatus(doc);
+    const statusColor = STATUS_OPTIONS.find(s => s.value === status).color;
+    html += `<div class="detail-item" style="justify-content:space-between;flex-wrap:wrap;gap:6px">
+      <div style="display:flex;align-items:center;gap:8px">
+        <span style="width:8px;height:8px;border-radius:50%;background:${statusColor};flex-shrink:0"></span>
+        <span class="doc-code" style="color:${proc.color}">${doc}</span>
+      </div>
+      <select class="status-select" data-doc="${doc}" data-action="status">
+        ${STATUS_OPTIONS.map(s => `<option value="${s.value}" ${status === s.value ? 'selected' : ''}>${s.label}</option>`).join("")}
+      </select>
+    </div>`;
+  });
+  html += `</div>`;
+
+  // Roles
+  html += `<div class="detail-card">
+    <div class="detail-card-title">Key Roles</div>`;
+  phase.roles.forEach(role => {
+    const initials = role.split(" ").map(w => w[0]).join("");
+    html += `<div class="detail-item">
+      <span style="width:22px;height:22px;border-radius:50%;background:#E5E7EB;display:flex;align-items:center;justify-content:center;font-size:9px;color:#6B7280;font-weight:700;flex-shrink:0">${initials}</span>
+      <span style="font-size:13px">${role}</span>
+    </div>`;
+  });
+  html += `</div>`;
+
+  // Cross-links
+  if (incoming.length > 0 || outgoing.length > 0) {
+    html += `<div class="detail-card">
+      <div class="detail-card-title">Process Connections</div>`;
+    incoming.forEach(link => {
+      const fromProc = PROCESSES[link.from];
+      html += `<div class="detail-item"><span style="color:${fromProc.color};font-weight:700;font-size:11px;font-family:var(--mono)">← ${link.from}</span><span style="font-size:12px;color:var(--ink-muted)">${link.label}</span></div>`;
+    });
+    outgoing.forEach(link => {
+      const toProc = PROCESSES[link.to];
+      html += `<div class="detail-item"><span style="color:${toProc.color};font-weight:700;font-size:11px;font-family:var(--mono)">→ ${link.to}</span><span style="font-size:12px;color:var(--ink-muted)">${link.label}</span></div>`;
+    });
+    html += `</div>`;
+  }
+
+  html += `</div></div>`;
+  return html;
+}
+
+// ─── MY ROLE VIEW ───────────────────────────────────────────
+function renderRoleView() {
+  let html = `<div style="margin-bottom:20px">
+    <input type="text" class="search-input" placeholder="Search for your role..." value="${searchTerm}" data-action="search-role" />
+  </div>`;
+  
+  const filtered = searchTerm
+    ? ALL_ROLES.filter(r => r.toLowerCase().includes(searchTerm.toLowerCase()))
+    : ALL_ROLES;
+
+  html += `<div class="role-chips">`;
+  filtered.forEach(role => {
+    html += `<button class="role-chip ${selectedRole === role ? 'active' : ''}" data-role="${role}">${role}</button>`;
+  });
+  html += `</div>`;
+
+  if (selectedRole) {
+    const touchpoints = [];
+    Object.values(PROCESSES).forEach(proc => {
+      proc.phases.forEach(phase => {
+        if (phase.roles.includes(selectedRole)) touchpoints.push({ process: proc, phase });
+      });
+    });
+    const grouped = {};
+    touchpoints.forEach(tp => {
+      if (!grouped[tp.process.code]) grouped[tp.process.code] = { process: tp.process, phases: [] };
+      grouped[tp.process.code].phases.push(tp.phase);
+    });
+
+    const initials = selectedRole.split(" ").map(w => w[0]).join("");
+    html += `<div class="section-panel fade-in">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
+        <div style="width:40px;height:40px;border-radius:50%;background:var(--ink);display:flex;align-items:center;justify-content:center;color:white;font-size:14px;font-weight:700">${initials}</div>
+        <div>
+          <h3 style="font-size:17px;font-weight:700">${selectedRole}</h3>
+          <p style="font-size:13px;color:var(--ink-faint)">Involved in ${touchpoints.length} process step${touchpoints.length !== 1 ? 's' : ''} across ${Object.keys(grouped).length} end-to-end process${Object.keys(grouped).length !== 1 ? 'es' : ''}</p>
+        </div>
+      </div>`;
+    
+    Object.values(grouped).forEach(({ process, phases }) => {
+      html += `<div style="padding:16px;background:${process.lightColor};border-radius:10px;border:1px solid ${process.color}20;margin-bottom:12px">
+        <div style="font-size:12px;font-weight:700;color:${process.color};margin-bottom:8px;font-family:var(--mono)">${process.code} — ${process.name}</div>
+        <div style="display:flex;flex-wrap:wrap;gap:8px">`;
+      phases.forEach(ph => {
+        html += `<div style="background:rgba(255,255,255,0.8);padding:8px 12px;border-radius:8px;font-size:12px;border:1px solid rgba(0,0,0,0.06)">
+          <span style="font-weight:600">${ph.label}</span>
+          <span style="color:var(--ink-faint);margin-left:6px;font-family:var(--mono);font-size:10px">${ph.docs.join(", ")}</span>
+        </div>`;
+      });
+      html += `</div></div>`;
+    });
+    html += `</div>`;
+
+    // Show flow diagrams with role highlighting
+    html += `<div style="margin-top:20px">
+      <div style="font-size:11px;font-weight:700;color:var(--ink-faint);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:12px">Process flows involving ${selectedRole}</div>`;
+    Object.values(PROCESSES).filter(proc => proc.phases.some(ph => ph.roles.includes(selectedRole))).forEach(proc => {
+      html += `<div class="section-panel" style="padding:20px;margin-bottom:12px">
+        <div style="font-size:13px;font-weight:700;color:${proc.color};font-family:var(--mono);margin-bottom:10px">${proc.code} — ${proc.name}</div>
+        ${renderFlowDiagram(proc, selectedRole)}
+      </div>`;
+    });
+    html += `</div>`;
+  }
+  return html;
+}
+
+// ─── CONNECTIONS VIEW ───────────────────────────────────────
+function renderConnectionsView() {
+  const relevantLinks = activeProcess
+    ? CROSS_LINKS.filter(l => l.from === activeProcess || l.to === activeProcess)
+    : CROSS_LINKS;
+
+  let html = `<div class="conn-grid">`;
+  
+  // Left: Map
+  html += `<div>`;
+  html += `<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px">
+    <button class="btn ${!activeProcess ? 'btn-primary' : ''}" data-conn-filter="">All</button>`;
+  Object.values(PROCESSES).forEach(proc => {
+    html += `<button class="btn ${activeProcess === proc.code ? '' : ''}" data-conn-filter="${proc.code}"
+      style="${activeProcess === proc.code ? `background:${proc.lightColor};color:${proc.color};border-color:${proc.color}` : ''};font-family:var(--mono);font-weight:700">${proc.code}</button>`;
+  });
+  html += `</div>`;
+  html += renderInterconnectionMap(activeProcess, relevantLinks);
+  html += `</div>`;
+
+  // Right: Governance + data flows
+  html += `<div>`;
+  html += renderGovernancePanel(activeProcess);
+  html += `<div class="map-container" style="margin-top:16px">
+    <div class="detail-card-title">Data Flows ${activeProcess ? `— ${activeProcess}` : '— All'}</div>`;
+  relevantLinks.forEach(link => {
+    const fromP = PROCESSES[link.from], toP = PROCESSES[link.to];
+    html += `<div class="data-flow-item">
+      <span class="process-badge" style="background:${fromP.lightColor};color:${fromP.color}">${link.from}</span>
+      <svg width="20" height="12" viewBox="0 0 20 12"><path d="M2 6 L14 6" stroke="#D1D5DB" stroke-width="1.5"/><path d="M12 2 L17 6 L12 10" fill="none" stroke="#D1D5DB" stroke-width="1.5"/></svg>
+      <span class="process-badge" style="background:${toP.lightColor};color:${toP.color}">${link.to}</span>
+      <span style="font-size:12px;color:var(--ink-muted);flex:1">${link.label}</span>
+    </div>`;
+  });
+  html += `</div></div></div>`;
+  return html;
+}
+
+function renderInterconnectionMap(active, relevantLinks) {
+  const procs = Object.values(PROCESSES);
+  const cx = 300, cy = 220, r = 160;
+  let svg = `<div class="map-container"><div class="detail-card-title">Process Interconnections${active ? ` — ${active} highlighted` : ''}</div>
+    <svg width="100%" viewBox="0 0 600 440" style="max-height:400px">`;
+  
+  relevantLinks.forEach((link, i) => {
+    const fi = procs.findIndex(p => p.code === link.from);
+    const ti = procs.findIndex(p => p.code === link.to);
+    const fa = (fi / procs.length) * 2 * Math.PI - Math.PI / 2;
+    const ta = (ti / procs.length) * 2 * Math.PI - Math.PI / 2;
+    const x1 = cx + r * Math.cos(fa), y1 = cy + r * Math.sin(fa);
+    const x2 = cx + r * Math.cos(ta), y2 = cy + r * Math.sin(ta);
+    // Use raw color values for SVG
+    const colors = { O2C: "#0E7363", S2P: "#7C3AED", R2R: "#1746A2", A2D: "#B45309", H2R: "#DC2626", P2D: "#475569" };
+    svg += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${colors[link.from]}" stroke-width="2" opacity="0.25" stroke-dasharray="6 4"/>`;
+    svg += `<circle cx="${(x1+x2)/2}" cy="${(y1+y2)/2}" r="3" fill="${colors[link.from]}" opacity="0.4"/>`;
+  });
+
+  const colors = { O2C: "#0E7363", S2P: "#7C3AED", R2R: "#1746A2", A2D: "#B45309", H2R: "#DC2626", P2D: "#475569" };
+  const lightColors = { O2C: "#D1FAF0", S2P: "#EDE9FE", R2R: "#DBEAFE", A2D: "#FEF3C7", H2R: "#FEE2E2", P2D: "#F1F5F9" };
+  
+  procs.forEach((p, i) => {
+    const angle = (i / procs.length) * 2 * Math.PI - Math.PI / 2;
+    const x = cx + r * Math.cos(angle), y = cy + r * Math.sin(angle);
+    const isActive = active === p.code;
+    const isConn = !active || relevantLinks.some(l => l.from === p.code || l.to === p.code);
+    svg += `<g opacity="${isConn ? 1 : 0.25}">
+      <circle cx="${x}" cy="${y}" r="${isActive ? 40 : 34}" fill="${isActive ? colors[p.code] : lightColors[p.code]}" stroke="${colors[p.code]}" stroke-width="${isActive ? 3 : 1.5}"/>
+      <text x="${x}" y="${y-4}" text-anchor="middle" font-size="${isActive ? 14 : 12}" font-weight="700" fill="${isActive ? 'white' : colors[p.code]}" font-family="'IBM Plex Mono',monospace">${p.code}</text>
+      <text x="${x}" y="${y+12}" text-anchor="middle" font-size="8" fill="${isActive ? 'rgba(255,255,255,0.8)' : '#9CA3AF'}" font-family="'Outfit',sans-serif">${p.icon}</text>
+    </g>`;
+  });
+
+  svg += `<text x="${cx}" y="${cy-8}" text-anchor="middle" font-size="11" fill="#9CA3AF" font-family="'Outfit',sans-serif" font-weight="600">FWG</text>`;
+  svg += `<text x="${cx}" y="${cy+8}" text-anchor="middle" font-size="9" fill="#D1D5DB" font-family="'Outfit',sans-serif">Sage 200</text>`;
+  svg += `</svg></div>`;
+  return svg;
+}
+
+function renderGovernancePanel(active) {
+  const relevant = active ? GOV_DOCS.filter(d => d.applies.includes(active)) : GOV_DOCS;
+  let html = `<div class="map-container">
+    <div class="detail-card-title">Governance & Cross-Cutting Documents</div>`;
+  relevant.forEach(doc => {
+    const status = getDocStatus(doc.code);
+    const statusColor = STATUS_OPTIONS.find(s => s.value === status).color;
+    html += `<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--surface);border-radius:8px;border:1px solid var(--border-soft);margin-bottom:6px">
+      <div style="display:flex;align-items:center;gap:10px">
+        <span style="width:8px;height:8px;border-radius:50%;background:${statusColor}"></span>
+        <span style="font-size:11px;font-weight:600;color:var(--ink-muted);font-family:var(--mono);background:#E5E7EB;padding:2px 8px;border-radius:4px">${doc.code}</span>
+        <span style="font-size:13px">${doc.name}</span>
+      </div>
+      <span style="font-size:10px;color:var(--ink-faint);padding:2px 8px;background:var(--surface);border-radius:4px;font-family:var(--mono)">${doc.type}</span>
+    </div>`;
+  });
+  html += `</div>`;
+  return html;
+}
+
+// ─── STATUS DASHBOARD VIEW ──────────────────────────────────
+function renderStatusView() {
+  const stats = getStats();
+  
+  let html = `
+  <div class="dash-grid">
+    <div class="dash-card">
+      <div class="dash-card-label">Total Documents</div>
+      <div class="dash-card-value">${stats.total}</div>
+      <div class="dash-card-sub">Across all process areas</div>
+    </div>
+    <div class="dash-card">
+      <div class="dash-card-label">Completed</div>
+      <div class="dash-card-value" style="color:#10B981">${stats.completed}</div>
+      <div class="progress-bar">
+        <div class="progress-segment progress-seg-completed" style="width:${stats.total ? (stats.completed/stats.total*100) : 0}%"></div>
+        <div class="progress-segment progress-seg-review" style="width:${stats.total ? (stats.review/stats.total*100) : 0}%"></div>
+        <div class="progress-segment progress-seg-inprogress" style="width:${stats.total ? (stats.inProgress/stats.total*100) : 0}%"></div>
+      </div>
+    </div>
+    <div class="dash-card">
+      <div class="dash-card-label">In Review</div>
+      <div class="dash-card-value" style="color:#3B82F6">${stats.review}</div>
+      <div class="dash-card-sub">Awaiting approval</div>
+    </div>
+    <div class="dash-card">
+      <div class="dash-card-label">In Progress</div>
+      <div class="dash-card-value" style="color:#F59E0B">${stats.inProgress}</div>
+      <div class="dash-card-sub">Currently being worked on</div>
+    </div>
+    <div class="dash-card">
+      <div class="dash-card-label">Not Started</div>
+      <div class="dash-card-value" style="color:#9CA3AF">${stats.notStarted}</div>
+      <div class="dash-card-sub">Pending assignment</div>
+    </div>
+  </div>`;
+
+  // Per-process breakdown
+  html += `<div class="section-panel">
+    <div class="section-title" style="margin-bottom:16px">Progress by Process Area</div>`;
+  Object.values(PROCESSES).forEach(proc => {
+    const ps = getProcessStats(proc.code);
+    const colors = { O2C: "#0E7363", S2P: "#7C3AED", R2R: "#1746A2", A2D: "#B45309", H2R: "#DC2626", P2D: "#475569" };
+    html += `<div style="display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--border-soft)">
+      <span class="process-badge" style="background:${proc.lightColor};color:${colors[proc.code]};min-width:50px;text-align:center">${proc.code}</span>
+      <span style="font-size:13px;font-weight:600;min-width:140px">${proc.name}</span>
+      <div style="flex:1;height:8px;background:var(--border-soft);border-radius:4px;overflow:hidden;display:flex">
+        <div class="progress-segment progress-seg-completed" style="width:${ps.total ? (ps.completed/ps.total*100) : 0}%"></div>
+        <div class="progress-segment progress-seg-review" style="width:${ps.total ? (ps.review/ps.total*100) : 0}%"></div>
+        <div class="progress-segment progress-seg-inprogress" style="width:${ps.total ? (ps.inProgress/ps.total*100) : 0}%"></div>
+      </div>
+      <span style="font-size:12px;font-family:var(--mono);color:var(--ink-muted);min-width:70px;text-align:right">${ps.completed}/${ps.total}</span>
+    </div>`;
+  });
+  // Governance row
+  const govDocs = ALL_DOCS.filter(d => d.process === "GOV");
+  const govCompleted = govDocs.filter(d => getDocStatus(d.code) === "completed").length;
+  html += `<div style="display:flex;align-items:center;gap:12px;padding:12px 0">
+    <span class="process-badge" style="background:#F3F4F6;color:#6B7280;min-width:50px;text-align:center">GOV</span>
+    <span style="font-size:13px;font-weight:600;min-width:140px">Governance</span>
+    <div style="flex:1;height:8px;background:var(--border-soft);border-radius:4px;overflow:hidden;display:flex">
+      <div class="progress-segment progress-seg-completed" style="width:${govDocs.length ? (govCompleted/govDocs.length*100) : 0}%"></div>
+    </div>
+    <span style="font-size:12px;font-family:var(--mono);color:var(--ink-muted);min-width:70px;text-align:right">${govCompleted}/${govDocs.length}</span>
+  </div>`;
+  html += `</div>`;
+
+  // Legend
+  html += `<div class="legend" style="margin-top:16px">
+    ${STATUS_OPTIONS.map(s => `<div class="legend-item"><span class="legend-dot" style="background:${s.color}"></span>${s.label}</div>`).join("")}
+  </div>`;
+
+  // Filter + full document table
+  html += `<div class="section-panel" style="margin-top:24px">
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:16px">
+      <div class="section-title">All Documents</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        <button class="btn ${statusFilter==='all'?'btn-primary':''}" data-status-filter="all">All</button>
+        ${STATUS_OPTIONS.map(s => `<button class="btn ${statusFilter===s.value?'btn-primary':''}" data-status-filter="${s.value}">${s.label}</button>`).join("")}
+        <button class="btn btn-danger" data-action="reset-all" title="Reset all statuses">Reset</button>
+        <button class="btn" data-action="export-csv" title="Export to CSV">Export CSV</button>
+      </div>
+    </div>
+    <div style="overflow-x:auto">
+    <table class="doc-table">
+      <thead><tr>
+        <th>Code</th><th>Process</th><th>Phase / Document</th><th>System</th><th>Status</th><th>Notes</th>
+      </tr></thead>
+      <tbody>`;
+
+  const filteredDocs = statusFilter === "all" ? ALL_DOCS : ALL_DOCS.filter(d => getDocStatus(d.code) === statusFilter);
+  const colors = { O2C: "#0E7363", S2P: "#7C3AED", R2R: "#1746A2", A2D: "#B45309", H2R: "#DC2626", P2D: "#475569", GOV: "#6B7280" };
+  const lightColors = { O2C: "#D1FAF0", S2P: "#EDE9FE", R2R: "#DBEAFE", A2D: "#FEF3C7", H2R: "#FEE2E2", P2D: "#F1F5F9", GOV: "#F3F4F6" };
+
+  filteredDocs.forEach(doc => {
+    const status = getDocStatus(doc.code);
+    const notes = getDocNotes(doc.code);
+    html += `<tr>
+      <td><span class="doc-code" style="color:${colors[doc.process]}">${doc.code}</span></td>
+      <td><span class="process-badge" style="background:${lightColors[doc.process]};color:${colors[doc.process]}">${doc.process}</span></td>
+      <td style="font-size:13px">${doc.phase}</td>
+      <td style="font-size:12px;color:var(--ink-muted);font-family:var(--mono)">${doc.system}</td>
+      <td><select class="status-select" data-doc="${doc.code}" data-action="status">
+        ${STATUS_OPTIONS.map(s => `<option value="${s.value}" ${status === s.value ? 'selected' : ''}>${s.label}</option>`).join("")}
+      </select></td>
+      <td><input type="text" class="notes-field" data-doc="${doc.code}" data-action="notes" value="${escapeHtml(notes)}" placeholder="Add notes..." style="min-height:auto;resize:none" /></td>
+    </tr>`;
+  });
+
+  html += `</tbody></table></div></div>`;
+  
+  // Footer
+  html += `<div class="footer">
+    <span>Fluid Water Group — ERP Process Navigator v2.0</span>
+    <span>${ALL_DOCS.length} documents · ${Object.keys(PROCESSES).length} processes · ${CROSS_LINKS.length} interconnections</span>
+  </div>`;
+  
+  return html;
+}
+
+function escapeHtml(str) {
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ─── EVENT HANDLING ─────────────────────────────────────────
+function attachEvents() {
+  // Tab navigation
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      currentView = btn.dataset.view;
+      selectedPhase = null;
+      if (currentView !== "connections") activeProcess = null;
+      render();
+    });
+  });
+
+  // Process pills
+  document.querySelectorAll('[data-proc]').forEach(btn => {
+    if (btn.dataset.phase) return; // skip flow steps
+    btn.addEventListener('click', () => {
+      const code = btn.dataset.proc;
+      activeProcess = activeProcess === code ? null : code;
+      selectedPhase = null;
+      render();
+    });
+  });
+
+  // Flow step clicks
+  document.querySelectorAll('.flow-step[data-phase]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const phaseId = btn.dataset.phase;
+      const procCode = btn.dataset.proc;
+      const proc = PROCESSES[procCode];
+      if (proc) {
+        const phase = proc.phases.find(p => p.id === phaseId);
+        selectedPhase = selectedPhase?.id === phaseId ? null : phase;
+        render();
+      }
+    });
+  });
+
+  // Role selection
+  document.querySelectorAll('[data-role]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const role = btn.dataset.role;
+      selectedRole = selectedRole === role ? null : role;
+      render();
+    });
+  });
+
+  // Role search
+  document.querySelectorAll('[data-action="search-role"]').forEach(input => {
+    input.addEventListener('input', (e) => {
+      searchTerm = e.target.value;
+      render();
+      // Restore focus and cursor
+      const newInput = document.querySelector('[data-action="search-role"]');
+      if (newInput) { newInput.focus(); newInput.selectionStart = newInput.selectionEnd = searchTerm.length; }
+    });
+  });
+
+  // Status changes
+  document.querySelectorAll('[data-action="status"]').forEach(sel => {
+    sel.addEventListener('change', (e) => {
+      setDocStatus(e.target.dataset.doc, e.target.value);
+      render();
+    });
+  });
+
+  // Notes changes
+  document.querySelectorAll('[data-action="notes"]').forEach(input => {
+    input.addEventListener('change', (e) => {
+      setDocNotes(e.target.dataset.doc, e.target.value);
+    });
+  });
+
+  // Connection filter
+  document.querySelectorAll('[data-conn-filter]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const code = btn.dataset.connFilter;
+      activeProcess = code === "" ? null : (activeProcess === code ? null : code);
+      render();
+    });
+  });
+
+  // Status filter
+  document.querySelectorAll('[data-status-filter]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      statusFilter = btn.dataset.statusFilter;
+      render();
+    });
+  });
+
+  // Reset all
+  document.querySelectorAll('[data-action="reset-all"]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      if (confirm("Reset all document statuses and notes? This cannot be undone.")) {
+        appState = { docStatus: {}, docNotes: {} };
+        saveState(appState);
+        render();
+      }
+    });
+  });
+
+  // Export CSV (use API if available)
+  document.querySelectorAll('[data-action="export-csv"]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      if (useApi) {
+        window.location.href = '/api/export/csv';
+        return;
+      }
+      let csv = "Code,Process,Phase/Document,System,Status,Notes\n";
+      ALL_DOCS.forEach(doc => {
+        const status = getDocStatus(doc.code);
+        const notes = getDocNotes(doc.code).replace(/"/g, '""');
+        csv += `"${doc.code}","${doc.process}","${doc.phase}","${doc.system}","${status}","${notes}"\n`;
+      });
+      const blob = new Blob([csv], { type: "text/csv" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url; a.download = `FWG_Process_Status_${new Date().toISOString().slice(0,10)}.csv`;
+      a.click(); URL.revokeObjectURL(url);
+    });
+  });
+
+  // Login dialog
+  document.querySelectorAll('[data-action="show-login"]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const pw = prompt('Enter admin password:');
+      if (pw) doLogin(pw).then(ok => { if (!ok) alert('Incorrect password'); });
+    });
+  });
+
+  // Logout
+  document.querySelectorAll('[data-action="logout"]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      fetch('/api/auth/logout', { method: 'POST' }).then(() => {
+        isAuthenticated = false; render();
+      });
+    });
+  });
+}
+
+// ─── INIT ───────────────────────────────────────────────────
+render();
+initApi();
+</script>
+</body>
+</html>
